@@ -187,6 +187,8 @@ class MainWindow(QtWidgets.QMainWindow):
             crosshair=self._config["canvas"]["crosshair"],
         )
         self.canvas.zoomRequest.connect(self.zoomRequest)
+        self.canvas.dragReaquest.connect(self.dragRequest)
+        self.canvas.fitWindow.connect(self.setFitWindow)
         self.canvas.mouseMoved.connect(
             lambda pos: self.status(f"Mouse is at: x={pos.x()}, y={pos.y()}")
         )
@@ -1613,6 +1615,12 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             zoom_value = math.floor(zoom_value)
         self.setZoom(zoom_value)
+    def dragRequest(self, p: QtCore.QPoint):
+        if not hasattr(self, 'move_i'):
+            self.move_i = 1
+        print(p)
+        self.canvas.move(self.canvas.pos() + p)
+        self.move_i += 1
 
     def zoomRequest(self, delta, pos):
         canvas_width_old = self.canvas.width()
@@ -1642,6 +1650,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actions.fitWidth.setChecked(False)
         self.zoomMode = self.FIT_WINDOW if value else self.MANUAL_ZOOM
         self.adjustScale()
+        self.canvas.move(self.canvas.initPos)
 
     def setFitWidth(self, value=True):
         if value:

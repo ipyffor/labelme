@@ -24,7 +24,9 @@ MOVE_SPEED = 5.0
 
 
 class Canvas(QtWidgets.QWidget):
+    fitWindow = QtCore.pyqtSignal(bool)
     zoomRequest = QtCore.pyqtSignal(int, QtCore.QPoint)
+    dragReaquest = QtCore.pyqtSignal(QtCore.QPoint)
     scrollRequest = QtCore.pyqtSignal(int, int)
     newShape = QtCore.pyqtSignal()
     selectionChanged = QtCore.pyqtSignal(list)
@@ -64,6 +66,8 @@ class Canvas(QtWidgets.QWidget):
         super(Canvas, self).__init__(*args, **kwargs)
         # Initialise local state.
         self.mode = self.EDIT
+        self.initPos = self.pos()
+        self.left_clicked_moved = None # judge move or label
         self.shapes = []
         self.shapesBackups = []
         self.current = None
@@ -103,6 +107,8 @@ class Canvas(QtWidgets.QWidget):
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
 
         self._ai_model = None
+        self._dragging = False
+        self._last_mouse_pos = None
 
     def fillDrawing(self):
         return self._fill_drawing
@@ -243,16 +249,21 @@ class Canvas(QtWidgets.QWidget):
             pos = self.transformPos(ev.localPos())
         except AttributeError:
             return
-
+        self.left_clicked_moved = True
         self.mouseMoved.emit(pos)
 
         self.prevMovePoint = pos
         self.restoreCursor()
 
         is_shift_pressed = ev.modifiers() & QtCore.Qt.ShiftModifier
-
+        def drag_move(ev):
+            offset = ev.pos() - self._last_mouse_pos
+            self.dragReaquest.emit(QtCore.QPoint(offset.x(), offset.y()))
         # Polygon drawing.
         if self.drawing():
+            if QtCore.Qt.LeftButton & ev.buttons():
+                if self._dragging:
+                    drag_move(ev)
             if self.createMode in ["ai_polygon", "ai_mask"]:
                 self.line.shape_type = "points"
             else:
@@ -306,6 +317,8 @@ class Canvas(QtWidgets.QWidget):
             assert len(self.line.points) == len(self.line.point_labels)
             self.repaint()
             self.current.highlightClear()
+            
+
             return
 
         # Polygon copy moving.
@@ -330,6 +343,8 @@ class Canvas(QtWidgets.QWidget):
                 self.boundedMoveShapes(self.selectedShapes, pos)
                 self.repaint()
                 self.movingShape = True
+            elif self._dragging:
+                drag_move(ev)
             return
 
         # Just hovering over the canvas, 2 possibilities:
@@ -418,10 +433,54 @@ class Canvas(QtWidgets.QWidget):
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.localPos())
 
-        is_shift_pressed = ev.modifiers() & QtCore.Qt.ShiftModifier
-
         if ev.button() == QtCore.Qt.LeftButton:
-            if self.drawing():
+            self._dragging = True
+            self._last_mouse_pos = ev.pos()
+            self.left_clicked_moved = False
+            if self.editing():
+                if self.selectedEdge() and ev.modifiers() == QtCore.Qt.AltModifier:
+                    self.addPointToEdge()
+                elif self.selectedVertex() and ev.modifiers() == (
+                    QtCore.Qt.AltModifier | QtCore.Qt.ShiftModifier
+                ):
+                    self.removeSelectedPoint()
+
+                group_mode = int(ev.modifiers()) == QtCore.Qt.ControlModifier
+                self.selectShapePoint(pos, multiple_selection_mode=group_mode)
+                self.prevPoint = pos
+                self.repaint()
+        elif ev.button() == QtCore.Qt.RightButton and self.editing():
+            group_mode = int(ev.modifiers()) == QtCore.Qt.ControlModifier
+            if not self.selectedShapes or (
+                self.hShape is not None and self.hShape not in self.selectedShapes
+            ):
+                self.selectShapePoint(pos, multiple_selection_mode=group_mode)
+                self.repaint()
+            self.prevPoint = pos
+
+    def mouseReleaseEvent(self, ev):
+        pos = self.transformPos(ev.localPos())
+
+        is_shift_pressed = ev.modifiers() & QtCore.Qt.ShiftModifier
+        if ev.button() == QtCore.Qt.RightButton:
+            menu = self.menus[len(self.selectedShapesCopy) > 0]
+            self.restoreCursor()
+            if not menu.exec_(self.mapToGlobal(ev.pos())) and self.selectedShapesCopy:
+                # Cancel the move by deleting the shadow copy.
+                self.selectedShapesCopy = []
+                self.repaint()
+        elif ev.button() == QtCore.Qt.LeftButton:
+            self._dragging = False
+            if self.editing():
+                if (
+                    self.hShape is not None
+                    and self.hShapeIsSelected
+                    and not self.movingShape
+                ):
+                    self.selectionChanged.emit(
+                        [x for x in self.selectedShapes if x != self.hShape]
+                    )
+            elif self.drawing():
                 if self.current:
                     # Add point to existing shape.
                     if self.createMode == "polygon":
@@ -447,7 +506,7 @@ class Canvas(QtWidgets.QWidget):
                         self.line.point_labels[0] = self.current.point_labels[-1]
                         if ev.modifiers() & QtCore.Qt.ControlModifier:
                             self.finalise()
-                elif not self.outOfPixmap(pos):
+                elif not self.outOfPixmap(pos) and not self.left_clicked_moved:
                     # Create new shape.
                     self.current = Shape(
                         shape_type="points"
@@ -476,46 +535,6 @@ class Canvas(QtWidgets.QWidget):
                         self.setHiding()
                         self.drawingPolygon.emit(True)
                         self.update()
-            elif self.editing():
-                if self.selectedEdge() and ev.modifiers() == QtCore.Qt.AltModifier:
-                    self.addPointToEdge()
-                elif self.selectedVertex() and ev.modifiers() == (
-                    QtCore.Qt.AltModifier | QtCore.Qt.ShiftModifier
-                ):
-                    self.removeSelectedPoint()
-
-                group_mode = int(ev.modifiers()) == QtCore.Qt.ControlModifier
-                self.selectShapePoint(pos, multiple_selection_mode=group_mode)
-                self.prevPoint = pos
-                self.repaint()
-        elif ev.button() == QtCore.Qt.RightButton and self.editing():
-            group_mode = int(ev.modifiers()) == QtCore.Qt.ControlModifier
-            if not self.selectedShapes or (
-                self.hShape is not None and self.hShape not in self.selectedShapes
-            ):
-                self.selectShapePoint(pos, multiple_selection_mode=group_mode)
-                self.repaint()
-            self.prevPoint = pos
-
-    def mouseReleaseEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
-            menu = self.menus[len(self.selectedShapesCopy) > 0]
-            self.restoreCursor()
-            if not menu.exec_(self.mapToGlobal(ev.pos())) and self.selectedShapesCopy:
-                # Cancel the move by deleting the shadow copy.
-                self.selectedShapesCopy = []
-                self.repaint()
-        elif ev.button() == QtCore.Qt.LeftButton:
-            if self.editing():
-                if (
-                    self.hShape is not None
-                    and self.hShapeIsSelected
-                    and not self.movingShape
-                ):
-                    self.selectionChanged.emit(
-                        [x for x in self.selectedShapes if x != self.hShape]
-                    )
-
         if self.movingShape and self.hShape:
             index = self.shapes.index(self.hShape)
             if self.shapesBackups[-1][index].points != self.shapes[index].points:
@@ -565,6 +584,9 @@ class Canvas(QtWidgets.QWidget):
             self.createMode == "polygon" and self.canCloseShape()
         ) or self.createMode in ["ai_polygon", "ai_mask"]:
             self.finalise()
+
+        if ev.button() == QtCore.Qt.LeftButton:
+            self.fitWindow.emit(True)
 
     def selectShapes(self, shapes):
         self.setHiding()
