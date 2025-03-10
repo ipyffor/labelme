@@ -50,7 +50,6 @@ from . import utils
 LABEL_COLORMAP = imgviz.label_colormap()
 
 
-
 class MainWindow(QtWidgets.QMainWindow):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = 0, 1, 2
 
@@ -67,7 +66,8 @@ class MainWindow(QtWidgets.QMainWindow):
         output_dir=None,
     ):
         if output is not None:
-            logger.warning("argument output is deprecated, use output_file instead")
+            logger.warning(
+                "argument output is deprecated, use output_file instead")
             if output_file is None:
                 output_file = output
 
@@ -79,7 +79,8 @@ class MainWindow(QtWidgets.QMainWindow):
         cpu_count = os.cpu_count()
         if cpu_count is None or cpu_count < 2:
             raise ValueError("CPU count is less than 2.")
-        self.load_file_thread_pool = ThreadPoolExecutor(max_workers=int(cpu_count/2))
+        self.load_file_thread_pool = ThreadPoolExecutor(
+            max_workers=int(cpu_count/2))
         self.imageDataCacheLock = Lock()
         self.imgDataCacheSize = 50
         self.imageDataCache = collections.OrderedDict()
@@ -139,7 +140,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList.itemDoubleClicked.connect(self._edit_label)
         self.labelList.itemChanged.connect(self.labelItemChanged)
         self.labelList.itemDropped.connect(self.labelOrderChanged)
-        self.shape_dock = QtWidgets.QDockWidget(self.tr("Polygon Labels"), self)
+        self.shape_dock = QtWidgets.QDockWidget(
+            self.tr("Polygon Labels"), self)
         self.shape_dock.setObjectName("Labels")
         self.shape_dock.setWidget(self.labelList)
 
@@ -163,7 +165,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileSearch.setPlaceholderText(self.tr("Search Filename"))
         self.fileSearch.textChanged.connect(self.fileSearchChanged)
         self.fileListWidget = QtWidgets.QListWidget()
-        self.fileListWidget.itemSelectionChanged.connect(self.fileSelectionChanged)
+        self.fileListWidget.itemSelectionChanged.connect(
+            self.fileSelectionChanged)
         fileListLayout = QtWidgets.QVBoxLayout()
         fileListLayout.setContentsMargins(0, 0, 0, 0)
         fileListLayout.setSpacing(0)
@@ -635,7 +638,8 @@ class MainWindow(QtWidgets.QMainWindow):
         labelMenu = QtWidgets.QMenu()
         utils.addActions(labelMenu, (edit, delete))
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.labelList.customContextMenuRequested.connect(self.popLabelListMenu)
+        self.labelList.customContextMenuRequested.connect(
+            self.popLabelListMenu)
 
         # Store actions for further handling.
         self.actions = utils.struct(
@@ -942,10 +946,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 temp_filename = self.imageList[i]
                 if temp_filename in self.imageDataCache:
                     continue
-                self.load_file_thread_pool.submit(self.thread_fn_load_image, temp_filename)
-        if filename not in self.imageDataCache: 
+                self.load_file_thread_pool.submit(
+                    self.thread_fn_load_image, temp_filename)
+        if filename not in self.imageDataCache:
             with self.imageDataCacheLock:
-                self.imageDataCache[filename] = LabelFile.load_image_file(filename)
+                self.imageDataCache[filename] = LabelFile.load_image_file(
+                    filename)
         for _ in range(len(self.imageDataCache) - self.imgDataCacheSize):
             with self.imageDataCacheLock:
                 self.imageDataCache.popitem(last=False)
@@ -1222,8 +1228,10 @@ class MainWindow(QtWidgets.QMainWindow):
             edit_group_id = True
             edit_description = True
         else:
-            edit_text = all(item.shape().label == shape.label for item in items[1:])
-            edit_flags = all(item.shape().flags == shape.flags for item in items[1:])
+            edit_text = all(item.shape().label ==
+                            shape.label for item in items[1:])
+            edit_flags = all(item.shape().flags ==
+                             shape.flags for item in items[1:])
             edit_group_id = all(
                 item.shape().group_id == shape.group_id for item in items[1:]
             )
@@ -1292,7 +1300,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if shape.group_id is None:
                 item.setText(
                     '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
-                        html.escape(shape.label), *shape.fill_color.getRgb()[:3]
+                        html.escape(shape.label), *
+                        shape.fill_color.getRgb()[:3]
                     )
                 )
             else:
@@ -1501,7 +1510,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 flags=flags,
             )
             self.labelFile = lf
-            items = self.fileListWidget.findItems(self.imagePath, Qt.MatchExactly)
+            items = self.fileListWidget.findItems(
+                self.imagePath, Qt.MatchExactly)
             if len(items) > 0:
                 if len(items) != 1:
                     raise RuntimeError("There are duplicate files.")
@@ -1613,6 +1623,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             zoom_value = math.floor(zoom_value)
         self.setZoom(zoom_value)
+
     def dragRequest(self, p: QtCore.QPoint):
         if not hasattr(self, 'move_i'):
             self.move_i = 1
@@ -1661,7 +1672,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.keepPrevScale.setChecked(enabled)
 
     def onNewBrightnessContrast(self, qimage):
-        self.canvas.loadPixmap(QtGui.QPixmap.fromImage(qimage), clear_shapes=False)
+        self.canvas.loadPixmap(
+            QtGui.QPixmap.fromImage(qimage), clear_shapes=False)
 
     def brightnessContrast(self, value):
         dialog = BrightnessContrastDialog(
@@ -1711,7 +1723,8 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             return False
         # assumes same name, but json extension
-        self.status(str(self.tr("Loading %s...")) % osp.basename(str(filename)))
+        self.status(str(self.tr("Loading %s...")) %
+                    osp.basename(str(filename)))
         label_file = osp.splitext(filename)[0] + ".json"
         if self.output_dir:
             label_file_without_path = osp.basename(label_file)
@@ -1877,7 +1890,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if not self.mayContinue():
             event.ignore()
-        self.settings.setValue("filename", self.filename if self.filename else "")
+        self.settings.setValue(
+            "filename", self.filename if self.filename else "")
         self.settings.setValue("window/size", self.size())
         self.settings.setValue("window/position", self.pos())
         self.settings.setValue("window/state", self.saveState())
@@ -2019,7 +2033,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if current_filename in self.imageList:
             # retain currently selected file
-            self.fileListWidget.setCurrentRow(self.imageList.index(current_filename))
+            self.fileListWidget.setCurrentRow(
+                self.imageList.index(current_filename))
             self.fileListWidget.repaint()
 
     def saveFile(self, _value=False):
@@ -2041,9 +2056,11 @@ class MainWindow(QtWidgets.QMainWindow):
         caption = self.tr("%s - Choose File") % __appname__
         filters = self.tr("Label files (*%s)") % LabelFile.suffix
         if self.output_dir:
-            dlg = QtWidgets.QFileDialog(self, caption, self.output_dir, filters)
+            dlg = QtWidgets.QFileDialog(
+                self, caption, self.output_dir, filters)
         else:
-            dlg = QtWidgets.QFileDialog(self, caption, self.currentPath(), filters)
+            dlg = QtWidgets.QFileDialog(
+                self, caption, self.currentPath(), filters)
         dlg.setDefaultSuffix(LabelFile.suffix[1:])
         dlg.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         dlg.setOption(QtWidgets.QFileDialog.DontConfirmOverwrite, False)
@@ -2129,7 +2146,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.dirty:
             return True
         mb = QtWidgets.QMessageBox
-        msg = self.tr('Save annotations to "{}" before closing?').format(self.filename)
+        msg = self.tr('Save annotations to "{}" before closing?').format(
+            self.filename)
         answer = mb.question(
             self,
             self.tr("Save annotations?"),
@@ -2200,7 +2218,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.lastOpenDir and osp.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
-            defaultOpenDirPath = osp.dirname(self.filename) if self.filename else "."
+            defaultOpenDirPath = osp.dirname(
+                self.filename) if self.filename else "."
 
         targetDirPath = str(
             QtWidgets.QFileDialog.getExistingDirectory(

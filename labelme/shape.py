@@ -190,7 +190,8 @@ class Shape(object):
                 else self.fill_color.getRgb()
             )
             image_to_draw[self.mask] = fill_color
-            qimage = QtGui.QImage.fromData(labelme.utils.img_arr_to_data(image_to_draw))
+            qimage = QtGui.QImage.fromData(
+                labelme.utils.img_arr_to_data(image_to_draw))
             qimage = qimage.scaled(
                 qimage.size() * self.scale,
                 QtCore.Qt.IgnoreAspectRatio,
@@ -200,11 +201,13 @@ class Shape(object):
             painter.drawImage(self._scale_point(point=self.points[0]), qimage)
 
             line_path = QtGui.QPainterPath()
-            contours = skimage.measure.find_contours(np.pad(self.mask, pad_width=1))
+            contours = skimage.measure.find_contours(
+                np.pad(self.mask, pad_width=1))
             for contour in contours:
                 contour += [self.points[0].y(), self.points[0].x()]
                 line_path.moveTo(
-                    self._scale_point(QtCore.QPointF(contour[0, 1], contour[0, 0]))
+                    self._scale_point(QtCore.QPointF(
+                        contour[0, 1], contour[0, 0]))
                 )
                 for point in contour[1:]:
                     line_path.lineTo(
@@ -314,7 +317,8 @@ class Shape(object):
         for i in range(len(self.points)):
             start = self.points[i - 1]
             end = self.points[i]
-            start = QtCore.QPointF(start.x() * self.scale, start.y() * self.scale)
+            start = QtCore.QPointF(
+                start.x() * self.scale, start.y() * self.scale)
             end = QtCore.QPointF(end.x() * self.scale, end.y() * self.scale)
             line = [start, end]
             dist = labelme.utils.distancetoline(point, line)
@@ -346,7 +350,8 @@ class Shape(object):
         elif self.shape_type == "circle":
             path = QtGui.QPainterPath()
             if len(self.points) == 2:
-                raidus = labelme.utils.distance(self.points[0] - self.points[1])
+                raidus = labelme.utils.distance(
+                    self.points[0] - self.points[1])
                 path.addEllipse(self.points[0], raidus, raidus)
         else:
             # path = QtGui.QPainterPath(self.points[0])
