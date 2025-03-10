@@ -24,6 +24,8 @@ jobs:
     - shell: bash
       run: |
         make setup
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - shell: bash
       run: |
         make check
