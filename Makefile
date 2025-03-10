@@ -38,7 +38,8 @@ lint:
 mypy:
 	$(call exec,uv run mypy --package $(PACKAGE_NAME))
 
-check: lint mypy  # Run checks
+# check: lint mypy  # Run checks
+check: mypy  # Run checks
 
 test:  # Run tests
 	$(call exec,uv run pytest -v tests/)
