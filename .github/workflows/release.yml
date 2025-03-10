@@ -57,14 +57,12 @@ jobs:
       run: |
         make build
         uv pip install dist/labelme-*.whl
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
     - name: pyinstaller
       shell: bash
       run: |
-        pip install pyinstaller
-        LABELME_PATH=./labelme \
-        OSAM_PATH=$(python -c 'import os, osam; print(os.path.dirname(osam.__file__))') \
+        pip install pyinstaller pillow
+        LABELME_PATH=./labelme
+        OSAM_PATH=$(python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
         pyinstaller labelme/__main__.py \
           --name=Labelme \
           --windowed \
