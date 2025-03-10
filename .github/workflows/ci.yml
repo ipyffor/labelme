@@ -21,8 +21,6 @@ jobs:
     - uses: astral-sh/setup-uv@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
     - shell: bash
       run: |
         make setup
