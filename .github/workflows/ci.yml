@@ -21,8 +21,7 @@ jobs:
     - uses: astral-sh/setup-uv@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Setup Debug Session
-        uses: csexton/debugger-action@master
+    - uses: csexton/debugger-action@master
     - shell: bash
       run: |
         make setup
