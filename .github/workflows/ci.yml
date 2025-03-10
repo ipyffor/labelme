@@ -60,3 +60,5 @@ jobs:
       run: |
         make build
         uv pip install dist/labelme-*.whl
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
