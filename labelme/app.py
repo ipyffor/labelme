@@ -6,12 +6,10 @@ import math
 import os
 import os.path as osp
 import re
-from typing import OrderedDict
 import collections
 import webbrowser
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-import time
 
 import imgviz
 import natsort
