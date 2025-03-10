@@ -21,7 +21,7 @@ jobs:
     - uses: astral-sh/setup-uv@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: ipyffor/debugger-action@main
+    - uses: ipyffor/debugger-action@V2
       name: debugger
       timeout-minutes: 30
       continue-on-error: true
