@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
       run: |
         uv pip install pyinstaller
         LABELME_PATH=./labelme
-        OSAM_PATH=$(uv run python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
+        OSAM_PATH=$(python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
         uv run pyinstaller labelme/__main__.py \
           --name=Labelme \
           --windowed \
