@@ -121,8 +121,8 @@ labelme data_annotated/ --labels labels.txt  # specify label list with a file
 
 ```bash
 LABELME_PATH=./labelme
-OSAM_PATH=$(python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
-pyinstaller labelme/__main__.py \
+OSAM_PATH=$(uv run python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
+uv run pyinstaller labelme/__main__.py \
   --name=Labelme \
   --windowed \
   --noconfirm \
