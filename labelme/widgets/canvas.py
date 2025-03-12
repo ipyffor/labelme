@@ -6,7 +6,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-import labelme.ai
+# import labelme.ai
+load_ai = False
 import labelme.utils
 from labelme.shape import Shape
 
@@ -138,6 +139,9 @@ class Canvas(QtWidgets.QWidget):
         self._createMode = value
 
     def initializeAiModel(self, name):
+        if not load_ai:
+            logger.warning(f'no ai load')
+            return
         if name not in [model.name for model in labelme.ai.MODELS]:
             raise ValueError("Unsupported ai model: %s" % name)
         model = [model for model in labelme.ai.MODELS if model.name == name][0]

@@ -21,8 +21,9 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from labelme import __appname__
-from labelme import ai
-from labelme.ai import MODELS
+# from labelme import ai
+MODELS = None
+# from labelme.ai import MODELS
 from labelme.config import get_config
 from labelme.label_file import LabelFile
 from labelme.label_file import LabelFileError
@@ -812,7 +813,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #
         self._selectAiModelComboBox = QtWidgets.QComboBox()
         selectAiModel.defaultWidget().layout().addWidget(self._selectAiModelComboBox)
-        model_names = [model.name for model in MODELS]
+        model_names = [model.name for model in MODELS] if MODELS is not None else []
         self._selectAiModelComboBox.addItems(model_names)
         if self._config["ai"]["default"] in model_names:
             model_index = model_names.index(self._config["ai"]["default"])
@@ -1051,6 +1052,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(message, delay)
 
     def _submit_ai_prompt(self, _) -> None:
+        if MODELS is None:
+            return
         texts = self._ai_prompt_widget.get_text_prompt().split(",")
         boxes, scores, labels = ai.get_rectangles_from_texts(
             model="yoloworld",
