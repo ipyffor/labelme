@@ -62,7 +62,7 @@ jobs:
       run: |
         uv pip install pyinstaller
         LABELME_PATH=./labelme
-        OSAM_PATH=$(python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
+        OSAM_PATH=$(uv run python -c 'import os, osam; print(os.path.dirname(osam.__file__))')
         uv run pyinstaller labelme/__main__.py \
           --name=Labelme \
           --windowed \
