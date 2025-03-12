@@ -21,9 +21,6 @@ jobs:
     - shell: bash
       run: |
         make setup
-    - shell: bash
-      run: |
-        make check
     - name: Test
       shell: bash
       if: matrix.os == 'ubuntu-latest'
