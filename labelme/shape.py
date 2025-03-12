@@ -357,7 +357,7 @@ class Shape(object):
             # path = QtGui.QPainterPath(self.points[0])
             path = QtGui.QPainterPath()
             d = self.point_size
-            path.addEllipse(self.points[0], d/2, d/2)
+            path.addEllipse(self.points[0], d, d)
             for p in self.points[1:]:
                 path.lineTo(p)
         return path

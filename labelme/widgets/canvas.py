@@ -110,6 +110,7 @@ class Canvas(QtWidgets.QWidget):
         self._ai_model = None
         self._dragging = False
         self._last_mouse_pos = None
+        self.mouse_on_shape = None
 
     def fillDrawing(self):
         return self._fill_drawing
@@ -588,7 +589,7 @@ class Canvas(QtWidgets.QWidget):
         ) or self.createMode in ["ai_polygon", "ai_mask"]:
             self.finalise()
 
-        if ev.button() == QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.LeftButton and not self.mouse_on_shape:
             self.fitWindow.emit(True)
 
     def selectShapes(self, shapes):
@@ -603,7 +604,10 @@ class Canvas(QtWidgets.QWidget):
         #     shape.highlightVertex(index, shape.MOVE_VERTEX)
         # else:
         for shape in reversed(self.shapes):
+            if shape.shape_type == 'point':
+                print(f'shape: point: {shape.points[0]}, mouse point: {point}, contain: {shape.containsPoint(point)}')
             if self.isVisible(shape) and shape.containsPoint(point):
+                self.mouse_on_shape = True
                 self.setHiding()
                 if shape not in self.selectedShapes:
                     if multiple_selection_mode:
@@ -616,6 +620,7 @@ class Canvas(QtWidgets.QWidget):
                     self.hShapeIsSelected = True
                 self.calculateOffsets(point)
                 return
+        self.mouse_on_shape = False
         self.deSelectShape()
 
     def calculateOffsets(self, point):
