@@ -369,8 +369,12 @@ class Canvas(QtWidgets.QWidget):
                 self.hEdge = None
                 shape.highlightVertex(index, shape.MOVE_VERTEX)
                 self.overrideCursor(CURSOR_POINT)
+                group_id_str = f'({shape.group_id})' \
+                    if shape.group_id is not None \
+                    else ""
                 self.setToolTip(
                     self.tr(
+                        f"{shape.label}{group_id_str}\n"
                         "Click & Drag to move point\n"
                         "ALT + SHIFT + Click to delete point"
                     )
@@ -398,8 +402,11 @@ class Canvas(QtWidgets.QWidget):
                 self.prevhShape = self.hShape = shape
                 self.prevhEdge = self.hEdge
                 self.hEdge = None
+                group_id_str = f'({shape.group_id})' \
+                    if shape.group_id is not None \
+                    else ""
                 self.setToolTip(
-                    self.tr("Click & drag to move shape '%s'") % shape.label
+                    self.tr(f"Click & drag to move shape {shape.label}{group_id_str}")
                 )
                 self.setStatusTip(self.toolTip())
                 self.overrideCursor(CURSOR_GRAB)
