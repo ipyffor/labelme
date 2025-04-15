@@ -934,6 +934,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.imageDataCache[filename] = imageData
 
     def get_image_data(self, filename):
+        if filename not in self.imageList:
+            return LabelFile.load_image_file(filename)
         if len(self.imageDataCache) < self.imgDataCacheSize:
             current_index = self.imageList.index(filename)
             half_num = self.imgDataCacheSize // 2
